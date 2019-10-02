@@ -21,16 +21,23 @@ export default function useBookSearch(query, pageNumber) {
       url: "http://openlibrary.org/search.json",
       params: { q: query, page: pageNumber },
       cancelToken: new axios.CancelToken(c => (cancel = c))
-    }).then(res => {
-      setBooks(prevBooks => {
-        // a Set returns only unique values, we must remember to use the spread operator
-        // to return things back to an array after using the Set
-        return [...new Set([...prevBooks, ...res.data.docs.map(b => b.title)])];
+    })
+      .then(res => {
+        setBooks(prevBooks => {
+          // a Set returns only unique values, we must remember to use the spread operator
+          // to return things back to an array after using the Set
+          return [
+            ...new Set([...prevBooks, ...res.data.docs.map(b => b.title)])
+          ];
+        });
+        setHasMore(res.data.docs.length > 0);
+        setLoading(false);
+        console.log(res.data);
+      })
+      .catch(e => {
+        if (axios.isCancel(e)) return;
+        setError(true);
       });
-      setHasMore(res.data.docs.length > 0);
-      setLoading(false);
-      console.log(res.data);
-    });
     return () =>
       cancel(e => {
         if (axios.isCancel(e)) return;
